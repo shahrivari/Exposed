@@ -30,7 +30,14 @@ abstract class Op<T> : Expression<T>() {
     }
 }
 
-infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = AndOp(this, op)
+infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
+    this is AndOp && op is AndOp -> apply {
+        expressions.add(op.expr1)
+        expressions.addAll(op.expressions)
+    }
+    this is AndOp -> apply { expressions.add(expr1) }
+    else -> AndOp(this, op)
+}
 
 infix fun Op<Boolean>.or(op: Expression<Boolean>): Op<Boolean> = OrOp(this, op)
 
@@ -112,19 +119,19 @@ fun stringLiteral(value: String): LiteralOp<String> = LiteralOp(VarCharColumnTyp
 fun dateLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(false), value)
 fun dateTimeLiteral(value: DateTime): LiteralOp<DateTime> = LiteralOp(DateColumnType(true), value)
 
+private fun QueryBuilder.appendExpression(expr: Expression<*>) {
+    if (expr is OrOp) {
+        append("(", expr, ")")
+    } else {
+        append(expr)
+    }
+}
+
 abstract class ComparisonOp(val expr1: Expression<*>, val expr2: Expression<*>, val opSign: String) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        if (expr1 is OrOp) {
-            append("(", expr1, ")")
-        } else {
-            append(expr1)
-        }
+        appendExpression(expr1)
         append(" $opSign ")
-        if (expr2 is OrOp) {
-            append("(", expr2, ")")
-        } else {
-            append(expr2)
-        }
+        appendExpression(expr2)
     }
 }
 
@@ -139,7 +146,20 @@ class NotLikeOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1
 
 @Deprecated("Use not(RegexpOp()) instead", level = DeprecationLevel.ERROR)
 class NotRegexpOp(expr1: Expression<*>, expr2: Expression<*>) : ComparisonOp(expr1, expr2, "NOT REGEXP")
-class AndOp(expr1: Expression<Boolean>, expr2: Expression<Boolean>) : ComparisonOp(expr1, expr2, "AND")
+
+class AndOp(internal val expr1: Expression<*>, vararg expr: Expression<*>) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+        appendExpression(expr1)
+        expressions.forEach {
+            append(" AND ")
+            appendExpression(it)
+        }
+    }
+
+    internal val expressions = expr.toMutableList()
+
+}
+
 class RegexpOp<T:String?>(val expr1: Expression<T>, val expr2: Expression<String>, val caseSensitive: Boolean) : Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         currentDialect.functionProvider.regexp(expr1, expr2, caseSensitive, queryBuilder)
