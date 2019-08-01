@@ -75,8 +75,7 @@ abstract class Expression<T> {
         toString().hashCode()
     }
 
-    abstract internal fun toQueryBuilder(queryBuilder: QueryBuilder) : Unit
-//    fun toSQL(queryBuilder: QueryBuilder): String = toQueryBuilder(queryBuilder).to
+    abstract fun toQueryBuilder(queryBuilder: QueryBuilder) : Unit
 
     override fun equals(other: Any?): Boolean = (other as? Expression<*>)?.toString() == toString()
 
