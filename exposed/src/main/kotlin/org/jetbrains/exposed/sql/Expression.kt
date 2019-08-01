@@ -19,10 +19,9 @@ class QueryBuilder(val prepared: Boolean) {
         internalBuilder.append(postfix)
     }
 
+    operator fun Expression<*>.unaryPlus() = this@QueryBuilder.also { toQueryBuilder(it) }
 
-    internal operator fun Expression<*>.unaryPlus() = this@QueryBuilder.also { toQueryBuilder(it) }
-
-    internal fun append(vararg expr: Any) = apply {
+    fun append(vararg expr: Any) = apply {
         expr.forEach {
             when(it) {
                 is Expression<*> -> +it
@@ -32,8 +31,8 @@ class QueryBuilder(val prepared: Boolean) {
             }
         }
     }
-    internal operator fun Char.unaryPlus() = this@QueryBuilder.also { internalBuilder.append(this) }
-    internal operator fun String.unaryPlus() = this@QueryBuilder.also { internalBuilder.append(this) }
+    operator fun Char.unaryPlus() = this@QueryBuilder.also { internalBuilder.append(this) }
+    operator fun String.unaryPlus() = this@QueryBuilder.also { internalBuilder.append(this) }
 
     operator fun invoke(body : QueryBuilder.()->Unit) = body() /*.toString()*/
 
