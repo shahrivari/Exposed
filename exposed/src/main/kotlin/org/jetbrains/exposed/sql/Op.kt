@@ -168,18 +168,9 @@ class RegexpOp<T:String?>(val expr1: Expression<T>, val expr2: Expression<String
 
 class OrOp(val expr1: Expression<Boolean>, val expr2: Expression<Boolean>): Op<Boolean>() {
     override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        if (expr1 is OrOp) {
-            append(expr1)
-        } else {
-            append('(', expr1, ")")
-        }
+        appendExpression(expr1)
         append(" OR ")
-
-        if (expr2 is OrOp) {
-            append(expr2)
-        } else {
-            append('(', expr2, ")")
-        }
+        appendExpression(expr2)
     }
 }
 
