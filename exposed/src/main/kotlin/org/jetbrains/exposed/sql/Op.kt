@@ -35,7 +35,7 @@ infix fun Op<Boolean>.and(op: Expression<Boolean>): Op<Boolean> = when {
         expressions.add(op.expr1)
         expressions.addAll(op.expressions)
     }
-    this is AndOp -> apply { expressions.add(expr1) }
+    this is AndOp -> apply { expressions.add(op) }
     else -> AndOp(this, op)
 }
 
