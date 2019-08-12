@@ -29,9 +29,7 @@ class Column<T>(val table: Table, val name: String, override val columnType: ICo
 
     override fun toString(): String = "${table.javaClass.name}.$name"
 
-    override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
-        +TransactionManager.current().fullIdentity(this@Column)
-    }
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) = TransactionManager.current().fullIdentity(this@Column, queryBuilder)
 
     val ddl: List<String>
         get() = createStatement()
